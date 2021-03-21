@@ -11,6 +11,10 @@ interface Rooms {
     [room: string]: User[]
 }
 
+interface Names {
+    [user: string]: string
+}
+
 interface RoomsState {
     [room: string]: {
         playing: boolean
@@ -21,6 +25,7 @@ interface RoomsState {
 
 const rooms: Rooms = {}
 const roomsState: RoomsState = {}
+const userNames: Names = {}
 let connections = 0
 
 
@@ -68,10 +73,11 @@ function countUsers(room: Room): number {
 
 function getState(room: Room): RoomStateEvent {
     const { playing, seconds, timestamp } = roomsState[room] || {}
+    const users = rooms[room] || []
     return {
         type: "stats",
         room: room,
-        users: countUsers(room),
+        users: users.map(it => userNames[it.id]),
         playing: playing || false,
         seconds: seconds || 0,
         timestamp: timestamp || 0
@@ -83,7 +89,7 @@ wss.on("connection", function (ws: WebSocketClient) {
     connections++
     let user: string | null = null
     let room: string | null = null
-    
+
     const heartbeat = setInterval(() => {
         ws.ping("")
     }, 20_000)
@@ -92,6 +98,7 @@ wss.on("connection", function (ws: WebSocketClient) {
 
     ws.on("message", function (message: string) {
         const ev: SyncEvent = JSON.parse(message)
+        const prevRoom = room
 
         switch (ev.type) {
             case "join":
@@ -101,8 +108,6 @@ wss.on("connection", function (ws: WebSocketClient) {
                 joinRoom(ev.room, { id: ev.user, conn: ws })
                 break
             case "leave":
-
-                // console.log(ev.user.substr(0, 4) + "..", "left", ev.room.substr(0, 4) + "..")
 
                 // leave room
                 leaveRoom(ev.room, ev.user)
@@ -117,21 +122,36 @@ wss.on("connection", function (ws: WebSocketClient) {
                 roomsState[ev.room] = { ...roomsState[ev.room], playing: true, seconds: ev.seconds, timestamp: ev.timestamp }
                 sendRoom(ev.room, ev)
                 break
+            case "update_name":
+                if (ev.name) {
+                    userNames[ev.user] = ev.name
+                } else {
+                    delete userNames[ev.user]
+                }
+                break
         }
 
+        const nnRoom = room || prevRoom!
         // broadcast room stats
-        sendRoom(ev.room, getState(ev.room))
+        sendRoom(nnRoom, getState(nnRoom!))
     })
 
     ws.on("close", () => {
         clearInterval(heartbeat)
+        if (user) {
+            delete userNames[user]
+
+            if (room) {
+                // leave room
+                leaveRoom(room, user)
+                sendRoom(room!, getState(room!))
+                room = null
+            }
+        }
+
+        user = null
+
         connections--
         console.log("connections", connections)
-        if (room && user) {
-            // leave room
-            leaveRoom(room, user)
-            room = null
-        }
-        user = null
     })
 })

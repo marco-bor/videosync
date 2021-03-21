@@ -27,10 +27,17 @@ export interface LeaveEvent {
 export interface RoomStateEvent {
     type: "stats"
     room: string
-    users: number
+    users: string[]
     playing: boolean
     seconds: number
     timestamp: number
 }
 
-export type SyncEvent = PlayEvent | PauseEvent | JoinEvent | LeaveEvent | RoomStateEvent
+export interface UpdateNameEvent {
+    type: "update_name"
+    user: string
+    name: string
+    [key: string]: unknown
+}
+
+export type SyncEvent = PlayEvent | PauseEvent | JoinEvent | LeaveEvent | RoomStateEvent | UpdateNameEvent
