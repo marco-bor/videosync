@@ -83,6 +83,11 @@ wss.on("connection", function (ws: WebSocketClient) {
     connections++
     let user: string | null = null
     let room: string | null = null
+    
+    const heartbeat = setInterval(() => {
+        ws.ping("")
+    }, 20_000)
+
     console.log("connections", connections)
 
     ws.on("message", function (message: string) {
@@ -119,6 +124,7 @@ wss.on("connection", function (ws: WebSocketClient) {
     })
 
     ws.on("close", () => {
+        clearInterval(heartbeat)
         connections--
         console.log("connections", connections)
         if (room && user) {
