@@ -61,7 +61,7 @@ wss.on("connection", function (ws: WebSocketClient) {
                 break
             case "play":
                 console.log(ev.user, "play at", ev.seconds)
-                sendRoom(ev.room, { type: "play", seconds: ev.seconds, timestamp: ev.timestamp, room: ev.room, user: "" })
+                sendRoom(ev.room, ev)
                 break
         }
     })
