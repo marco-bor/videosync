@@ -24,4 +24,13 @@ export interface LeaveEvent {
     room: string
 }
 
-export type SyncEvent = PlayEvent | PauseEvent | JoinEvent | LeaveEvent
+export interface RoomStateEvent {
+    type: "stats"
+    room: string
+    users: number
+    playing: boolean
+    seconds: number
+    timestamp: number
+}
+
+export type SyncEvent = PlayEvent | PauseEvent | JoinEvent | LeaveEvent | RoomStateEvent
