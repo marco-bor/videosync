@@ -1,5 +1,5 @@
 import { WebSocketClient, WebSocketServer } from "https://deno.land/x/websocket@v0.1.0/mod.ts"
-import { SyncEvent, RoomStateEvent } from './types.ts'
+import { SyncEvent, RoomStateEvent } from './events.ts'
 
 interface User {
     id: string,
